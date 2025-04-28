@@ -1,7 +1,8 @@
 import { forwardRef } from "react"
 
-// TODO: Input 컴포넌트 타입 정의
-const Input = forwardRef(({ className, type, ...props }, ref) => {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
   return (
     <input
       type={type}
