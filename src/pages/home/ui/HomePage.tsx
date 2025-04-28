@@ -4,10 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom"
 
 import {
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -25,6 +21,7 @@ import {
   TableHeader,
   TableRow,
   Textarea,
+  Card,
 } from "@/shared/ui"
 
 const HomePage = () => {
@@ -472,17 +469,17 @@ const HomePage = () => {
   )
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+    <Card.Root className="w-full max-w-6xl mx-auto">
+      <Card.Header>
+        <Card.Title className="flex items-center justify-between">
           <span>게시물 관리자</span>
           <Button onClick={() => setShowAddDialog(true)}>
             <Plus className="w-4 h-4 mr-2" />
             게시물 추가
           </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
         <div className="flex flex-col gap-4">
           {/* 검색 및 필터 컨트롤 */}
           <div className="flex gap-4">
@@ -569,7 +566,7 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-      </CardContent>
+      </Card.Content>
 
       {/* 게시물 추가 대화상자 */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -703,7 +700,7 @@ const HomePage = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </Card>
+    </Card.Root>
   )
 }
 
