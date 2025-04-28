@@ -1,7 +1,8 @@
 import { BrowserRouter as Router } from "react-router-dom"
-import { AppHeader } from "@/widgets/app-header"
-import Footer from "@/widgets/ui/Footer.tsx"
+
 import PostsManagerPage from "@/pages/PostsManagerPage.tsx"
+import { AppHeader } from "@/widgets/app-header"
+import { AppFooter } from "@/widgets/app-footer"
 
 const App = () => {
   return (
@@ -11,7 +12,7 @@ const App = () => {
         <main className="flex-grow container mx-auto px-4 py-8">
           <PostsManagerPage />
         </main>
-        <Footer />
+        <AppFooter />
       </div>
     </Router>
   )
