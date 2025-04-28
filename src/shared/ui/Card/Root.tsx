@@ -1,7 +1,8 @@
 import { forwardRef } from "react"
 
-// TODO: Root 컴포넌트 타입 정의
-const Root = forwardRef(({ className, ...props }, ref) => (
+interface RootProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const Root = forwardRef<HTMLDivElement, RootProps>(({ className, ...props }, ref) => (
   <div ref={ref} className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`} {...props} />
 ))
 Root.displayName = "Card"
