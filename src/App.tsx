@@ -1,6 +1,6 @@
 import { BrowserRouter as Router } from "react-router-dom"
 
-import PostsManagerPage from "@/pages/PostsManagerPage.tsx"
+import { HomePage } from "@/pages/home"
 import { AppHeader } from "@/widgets/app-header"
 import { AppFooter } from "@/widgets/app-footer"
 
@@ -10,7 +10,7 @@ const App = () => {
       <div className="flex flex-col min-h-screen">
         <AppHeader />
         <main className="flex-grow container mx-auto px-4 py-8">
-          <PostsManagerPage />
+          <HomePage />
         </main>
         <AppFooter />
       </div>
