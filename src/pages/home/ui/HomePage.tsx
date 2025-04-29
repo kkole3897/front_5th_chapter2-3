@@ -5,9 +5,6 @@ import { useLocation, useNavigate } from "react-router-dom"
 import {
   Button,
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   Input,
   Select,
   Table,
@@ -565,11 +562,11 @@ const HomePage = () => {
       </Card.Content>
 
       {/* 게시물 추가 대화상자 */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>새 게시물 추가</DialogTitle>
-          </DialogHeader>
+      <Dialog.Root open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>새 게시물 추가</Dialog.Title>
+          </Dialog.Header>
           <div className="space-y-4">
             <Input
               placeholder="제목"
@@ -590,15 +587,15 @@ const HomePage = () => {
             />
             <Button onClick={addPost}>게시물 추가</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Dialog.Content>
+      </Dialog.Root>
 
       {/* 게시물 수정 대화상자 */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>게시물 수정</DialogTitle>
-          </DialogHeader>
+      <Dialog.Root open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>게시물 수정</Dialog.Title>
+          </Dialog.Header>
           <div className="space-y-4">
             <Input
               placeholder="제목"
@@ -613,15 +610,15 @@ const HomePage = () => {
             />
             <Button onClick={updatePost}>게시물 업데이트</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Dialog.Content>
+      </Dialog.Root>
 
       {/* 댓글 추가 대화상자 */}
-      <Dialog open={showAddCommentDialog} onOpenChange={setShowAddCommentDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>새 댓글 추가</DialogTitle>
-          </DialogHeader>
+      <Dialog.Root open={showAddCommentDialog} onOpenChange={setShowAddCommentDialog}>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>새 댓글 추가</Dialog.Title>
+          </Dialog.Header>
           <div className="space-y-4">
             <Textarea
               placeholder="댓글 내용"
@@ -630,15 +627,15 @@ const HomePage = () => {
             />
             <Button onClick={addComment}>댓글 추가</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Dialog.Content>
+      </Dialog.Root>
 
       {/* 댓글 수정 대화상자 */}
-      <Dialog open={showEditCommentDialog} onOpenChange={setShowEditCommentDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>댓글 수정</DialogTitle>
-          </DialogHeader>
+      <Dialog.Root open={showEditCommentDialog} onOpenChange={setShowEditCommentDialog}>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>댓글 수정</Dialog.Title>
+          </Dialog.Header>
           <div className="space-y-4">
             <Textarea
               placeholder="댓글 내용"
@@ -647,28 +644,28 @@ const HomePage = () => {
             />
             <Button onClick={updateComment}>댓글 업데이트</Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Dialog.Content>
+      </Dialog.Root>
 
       {/* 게시물 상세 보기 대화상자 */}
-      <Dialog open={showPostDetailDialog} onOpenChange={setShowPostDetailDialog}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{highlightText(selectedPost?.title, searchQuery)}</DialogTitle>
-          </DialogHeader>
+      <Dialog.Root open={showPostDetailDialog} onOpenChange={setShowPostDetailDialog}>
+        <Dialog.Content className="max-w-3xl">
+          <Dialog.Header>
+            <Dialog.Title>{highlightText(selectedPost?.title, searchQuery)}</Dialog.Title>
+          </Dialog.Header>
           <div className="space-y-4">
             <p>{highlightText(selectedPost?.body, searchQuery)}</p>
             {renderComments(selectedPost?.id)}
           </div>
-        </DialogContent>
-      </Dialog>
+        </Dialog.Content>
+      </Dialog.Root>
 
       {/* 사용자 모달 */}
-      <Dialog open={showUserModal} onOpenChange={setShowUserModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>사용자 정보</DialogTitle>
-          </DialogHeader>
+      <Dialog.Root open={showUserModal} onOpenChange={setShowUserModal}>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>사용자 정보</Dialog.Title>
+          </Dialog.Header>
           <div className="space-y-4">
             <img src={selectedUser?.image} alt={selectedUser?.username} className="w-24 h-24 rounded-full mx-auto" />
             <h3 className="text-xl font-semibold text-center">{selectedUser?.username}</h3>
@@ -694,8 +691,8 @@ const HomePage = () => {
               </p>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Dialog.Content>
+      </Dialog.Root>
     </Card.Root>
   )
 }
