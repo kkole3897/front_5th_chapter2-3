@@ -2,8 +2,15 @@ import { useEffect, useState } from "react"
 import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 
-import { PostWithAuthor, PostAddDialog, useAddPostDialogStore, usePostsStore, PostAddButton } from "@/features/post"
-import { Post, Tag, api as postApi } from "@/entities/post"
+import {
+  PostWithAuthor,
+  PostAddDialog,
+  usePostsStore,
+  PostAddButton,
+  PostTagSelector,
+  useSelectTagStore,
+} from "@/features/post"
+import { Post, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
 import { Comment, api as commentApi } from "@/entities/comment"
 import { Button, Dialog, Input, Select, Textarea, Card, Table } from "@/shared/ui"
@@ -14,7 +21,6 @@ const HomePage = () => {
   const queryParams = new URLSearchParams(location.search)
 
   // 상태 관리
-  const { setShowAddDialog } = useAddPostDialogStore()
   const { posts, setPosts } = usePostsStore()
 
   const [total, setTotal] = useState(0)
@@ -26,8 +32,7 @@ const HomePage = () => {
   const [sortOrder, setSortOrder] = useState(queryParams.get("sortOrder") || "asc")
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [tags, setTags] = useState<Tag[]>([])
-  const [selectedTag, setSelectedTag] = useState(queryParams.get("tag") || "")
+  const { selectedTag, setSelectedTag } = useSelectTagStore()
   const [comments, setComments] = useState<Record<number, Comment[]>>({})
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
   const [newComment, setNewComment] = useState<{ body: string; postId: null | number; userId: number }>({
@@ -80,16 +85,6 @@ const HomePage = () => {
       .finally(() => {
         setLoading(false)
       })
-  }
-
-  // 태그 가져오기
-  const fetchTags = async () => {
-    try {
-      const data = await postApi.getPostTags()
-      setTags(data)
-    } catch (error) {
-      console.error("태그 가져오기 오류:", error)
-    }
   }
 
   // 게시물 검색
@@ -258,10 +253,6 @@ const HomePage = () => {
       console.error("사용자 정보 가져오기 오류:", error)
     }
   }
-
-  useEffect(() => {
-    fetchTags()
-  }, [])
 
   useEffect(() => {
     if (selectedTag) {
@@ -449,26 +440,7 @@ const HomePage = () => {
                 />
               </div>
             </div>
-            <Select.Root
-              value={selectedTag}
-              onValueChange={(value) => {
-                setSelectedTag(value)
-                fetchPostsByTag(value)
-                updateURL()
-              }}
-            >
-              <Select.Trigger className="w-[180px]">
-                <Select.Value placeholder="태그 선택" />
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Item value="all">모든 태그</Select.Item>
-                {tags.map((tag) => (
-                  <Select.Item key={tag.url} value={tag.slug}>
-                    {tag.slug}
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Root>
+            <PostTagSelector />
             <Select.Root value={sortBy} onValueChange={setSortBy}>
               <Select.Trigger className="w-[180px]">
                 <Select.Value placeholder="정렬 기준" />
