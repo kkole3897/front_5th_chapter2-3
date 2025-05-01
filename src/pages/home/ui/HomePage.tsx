@@ -9,6 +9,9 @@ import {
   PostAddButton,
   PostTagSelector,
   useSelectTagStore,
+  PostSortBySelector,
+  useSortStore,
+  PostSortOrderSelector,
 } from "@/features/post"
 import { Post, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
@@ -28,8 +31,7 @@ const HomePage = () => {
   const [limit, setLimit] = useState(parseInt(queryParams.get("limit") || "10"))
   const [searchQuery, setSearchQuery] = useState(queryParams.get("search") || "")
   const [selectedPost, setSelectedPost] = useState<PostWithAuthor | null>(null)
-  const [sortBy, setSortBy] = useState(queryParams.get("sortBy") || "")
-  const [sortOrder, setSortOrder] = useState(queryParams.get("sortOrder") || "asc")
+  const { sortBy, sortOrder, setSortBy, setSortOrder } = useSortStore()
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [loading, setLoading] = useState(false)
   const { selectedTag, setSelectedTag } = useSelectTagStore()
@@ -441,26 +443,8 @@ const HomePage = () => {
               </div>
             </div>
             <PostTagSelector />
-            <Select.Root value={sortBy} onValueChange={setSortBy}>
-              <Select.Trigger className="w-[180px]">
-                <Select.Value placeholder="정렬 기준" />
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Item value="none">없음</Select.Item>
-                <Select.Item value="id">ID</Select.Item>
-                <Select.Item value="title">제목</Select.Item>
-                <Select.Item value="reactions">반응</Select.Item>
-              </Select.Content>
-            </Select.Root>
-            <Select.Root value={sortOrder} onValueChange={setSortOrder}>
-              <Select.Trigger className="w-[180px]">
-                <Select.Value placeholder="정렬 순서" />
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Item value="asc">오름차순</Select.Item>
-                <Select.Item value="desc">내림차순</Select.Item>
-              </Select.Content>
-            </Select.Root>
+            <PostSortBySelector />
+            <PostSortOrderSelector />
           </div>
 
           {/* 게시물 테이블 */}
