@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { Post, Tag, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
 import { PostWithAuthor } from "@/features/post"
+import { Comment, api as commentApi } from "@/entities/comment"
 import { Button, Dialog, Input, Select, Textarea, Card, Table } from "@/shared/ui"
 
 const HomePage = () => {
@@ -18,7 +19,7 @@ const HomePage = () => {
   const [skip, setSkip] = useState(parseInt(queryParams.get("skip") || "0"))
   const [limit, setLimit] = useState(parseInt(queryParams.get("limit") || "10"))
   const [searchQuery, setSearchQuery] = useState(queryParams.get("search") || "")
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [selectedPost, setSelectedPost] = useState<PostWithAuthor | null>(null)
   const [sortBy, setSortBy] = useState(queryParams.get("sortBy") || "")
   const [sortOrder, setSortOrder] = useState(queryParams.get("sortOrder") || "asc")
   const [showAddDialog, setShowAddDialog] = useState(false)
@@ -27,9 +28,13 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false)
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTag, setSelectedTag] = useState(queryParams.get("tag") || "")
-  const [comments, setComments] = useState({})
-  const [selectedComment, setSelectedComment] = useState(null)
-  const [newComment, setNewComment] = useState({ body: "", postId: null, userId: 1 })
+  const [comments, setComments] = useState<Record<number, Comment[]>>({})
+  const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
+  const [newComment, setNewComment] = useState<{ body: string; postId: null | number; userId: number }>({
+    body: "",
+    postId: null,
+    userId: 1,
+  })
   const [showAddCommentDialog, setShowAddCommentDialog] = useState(false)
   const [showEditCommentDialog, setShowEditCommentDialog] = useState(false)
   const [showPostDetailDialog, setShowPostDetailDialog] = useState(false)
@@ -114,7 +119,7 @@ const HomePage = () => {
   }
 
   // 태그별 게시물 가져오기
-  const fetchPostsByTag = async (tag) => {
+  const fetchPostsByTag = async (tag: string) => {
     if (!tag || tag === "all") {
       fetchPosts()
       return
@@ -175,11 +180,10 @@ const HomePage = () => {
   }
 
   // 댓글 가져오기
-  const fetchComments = async (postId) => {
+  const fetchComments = async (postId: number) => {
     if (comments[postId]) return // 이미 불러온 댓글이 있으면 다시 불러오지 않음
     try {
-      const response = await fetch(`/api/comments/post/${postId}`)
-      const data = await response.json()
+      const data = await commentApi.getComments(postId)
       setComments((prev) => ({ ...prev, [postId]: data.comments }))
     } catch (error) {
       console.error("댓글 가져오기 오류:", error)
@@ -189,12 +193,13 @@ const HomePage = () => {
   // 댓글 추가
   const addComment = async () => {
     try {
-      const response = await fetch("/api/comments/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newComment),
-      })
-      const data = await response.json()
+      if (!newComment.postId) {
+        throw new Error("게시물 ID가 없습니다.")
+      }
+
+      const payload = newComment as unknown as Parameters<typeof commentApi.addComment>[0]
+
+      const data = await commentApi.addComment(payload)
       setComments((prev) => ({
         ...prev,
         [data.postId]: [...(prev[data.postId] || []), data],
@@ -209,12 +214,7 @@ const HomePage = () => {
   // 댓글 업데이트
   const updateComment = async () => {
     try {
-      const response = await fetch(`/api/comments/${selectedComment.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: selectedComment.body }),
-      })
-      const data = await response.json()
+      const data = await commentApi.updateComment(selectedComment!)
       setComments((prev) => ({
         ...prev,
         [data.postId]: prev[data.postId].map((comment) => (comment.id === data.id ? data : comment)),
@@ -226,11 +226,9 @@ const HomePage = () => {
   }
 
   // 댓글 삭제
-  const deleteComment = async (id, postId) => {
+  const deleteComment = async (id: number, postId: number) => {
     try {
-      await fetch(`/api/comments/${id}`, {
-        method: "DELETE",
-      })
+      await commentApi.deleteComment(id)
       setComments((prev) => ({
         ...prev,
         [postId]: prev[postId].filter((comment) => comment.id !== id),
@@ -241,19 +239,14 @@ const HomePage = () => {
   }
 
   // 댓글 좋아요
-  const likeComment = async (id, postId) => {
+  const likeComment = async (id: number, postId: number) => {
     try {
-      const response = await fetch(`/api/comments/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ likes: comments[postId].find((c) => c.id === id).likes + 1 }),
-      })
-      const data = await response.json()
+      const likes = comments[postId].find((c) => c.id === id)!.likes + 1
+
+      const data = await commentApi.updateCommentLikes(id, likes)
       setComments((prev) => ({
         ...prev,
-        [postId]: prev[postId].map((comment) =>
-          comment.id === data.id ? { ...data, likes: comment.likes + 1 } : comment,
-        ),
+        [postId]: prev[postId].map((comment) => (comment.id === data.id ? { ...data, likes } : comment)),
       }))
     } catch (error) {
       console.error("댓글 좋아요 오류:", error)
@@ -261,7 +254,7 @@ const HomePage = () => {
   }
 
   // 게시물 상세 보기
-  const openPostDetail = (post) => {
+  const openPostDetail = (post: PostWithAuthor) => {
     setSelectedPost(post)
     fetchComments(post.id)
     setShowPostDetailDialog(true)
@@ -357,7 +350,7 @@ const HomePage = () => {
               </div>
             </Table.Cell>
             <Table.Cell>
-              <div className="flex items-center space-x-2 cursor-pointer" onClick={() => openUserModal(post.author)}>
+              <div className="flex items-center space-x-2 cursor-pointer" onClick={() => openUserModal(post.author!)}>
                 <img src={post.author?.image} alt={post.author?.username} className="w-8 h-8 rounded-full" />
                 <span>{post.author?.username}</span>
               </div>
@@ -397,7 +390,7 @@ const HomePage = () => {
   )
 
   // 댓글 렌더링
-  const renderComments = (postId) => (
+  const renderComments = (postId: number) => (
     <div className="mt-2">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold">댓글</h3>
@@ -623,7 +616,7 @@ const HomePage = () => {
             <Textarea
               placeholder="댓글 내용"
               value={selectedComment?.body || ""}
-              onChange={(e) => setSelectedComment({ ...selectedComment, body: e.target.value })}
+              onChange={(e) => setSelectedComment({ ...selectedComment!, body: e.target.value })}
             />
             <Button onClick={updateComment}>댓글 업데이트</Button>
           </div>
@@ -634,11 +627,11 @@ const HomePage = () => {
       <Dialog.Root open={showPostDetailDialog} onOpenChange={setShowPostDetailDialog}>
         <Dialog.Content className="max-w-3xl">
           <Dialog.Header>
-            <Dialog.Title>{highlightText(selectedPost!.title, searchQuery)}</Dialog.Title>
+            <Dialog.Title>{highlightText(selectedPost?.title || "", searchQuery)}</Dialog.Title>
           </Dialog.Header>
           <div className="space-y-4">
-            <p>{highlightText(selectedPost!.body, searchQuery)}</p>
-            {renderComments(selectedPost?.id)}
+            <p>{highlightText(selectedPost?.body || "", searchQuery)}</p>
+            {renderComments(selectedPost?.id || 0)}
           </div>
         </Dialog.Content>
       </Dialog.Root>
