@@ -12,6 +12,8 @@ import {
   PostSortBySelector,
   useSortStore,
   PostSortOrderSelector,
+  PostEditDialog,
+  useEditPostDialogStore,
 } from "@/features/post"
 import { Post, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
@@ -32,7 +34,7 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState(queryParams.get("search") || "")
   const [selectedPost, setSelectedPost] = useState<PostWithAuthor | null>(null)
   const { sortBy, sortOrder, setSortBy, setSortOrder } = useSortStore()
-  const [showEditDialog, setShowEditDialog] = useState(false)
+  const { setShowEditDialog } = useEditPostDialogStore()
   const [loading, setLoading] = useState(false)
   const { selectedTag, setSelectedTag } = useSelectTagStore()
   const [comments, setComments] = useState<Record<number, Comment[]>>({})
@@ -141,17 +143,6 @@ const HomePage = () => {
       console.error("태그별 게시물 가져오기 오류:", error)
     }
     setLoading(false)
-  }
-
-  // 게시물 업데이트
-  const updatePost = async () => {
-    try {
-      const data = await postApi.updatePost(selectedPost!.id, selectedPost!)
-      setPosts(posts.map((post) => (post.id === data.id ? data : post)))
-      setShowEditDialog(false)
-    } catch (error) {
-      console.error("게시물 업데이트 오류:", error)
-    }
   }
 
   // 게시물 삭제
@@ -479,30 +470,10 @@ const HomePage = () => {
       </Card.Content>
 
       {/* 게시물 추가 대화상자 */}
-      {<PostAddDialog />}
+      <PostAddDialog />
 
       {/* 게시물 수정 대화상자 */}
-      <Dialog.Root open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>게시물 수정</Dialog.Title>
-          </Dialog.Header>
-          <div className="space-y-4">
-            <Input
-              placeholder="제목"
-              value={selectedPost?.title || ""}
-              onChange={(e) => setSelectedPost({ ...selectedPost!, title: e.target.value })}
-            />
-            <Textarea
-              rows={15}
-              placeholder="내용"
-              value={selectedPost?.body || ""}
-              onChange={(e) => setSelectedPost({ ...selectedPost!, body: e.target.value })}
-            />
-            <Button onClick={updatePost}>게시물 업데이트</Button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Root>
+      <PostEditDialog />
 
       {/* 댓글 추가 대화상자 */}
       <Dialog.Root open={showAddCommentDialog} onOpenChange={setShowAddCommentDialog}>

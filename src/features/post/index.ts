@@ -1,2 +1,16 @@
-export { type PostWithAuthor, useAddPostDialogStore, usePostsStore, useSelectTagStore, useSortStore } from "./model"
-export { PostAddDialog, PostAddButton, PostTagSelector, PostSortBySelector, PostSortOrderSelector } from "./ui"
+export {
+  type PostWithAuthor,
+  useAddPostDialogStore,
+  usePostsStore,
+  useSelectTagStore,
+  useSortStore,
+  useEditPostDialogStore,
+} from "./model"
+export {
+  PostAddDialog,
+  PostAddButton,
+  PostTagSelector,
+  PostSortBySelector,
+  PostSortOrderSelector,
+  PostEditDialog,
+} from "./ui"
