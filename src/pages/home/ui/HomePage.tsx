@@ -3,6 +3,8 @@ import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from
 import { useLocation, useNavigate } from "react-router-dom"
 
 import { Post, Tag, api as postApi } from "@/entities/post"
+import { User, api as userApi } from "@/entities/user"
+import { PostWithAuthor } from "@/features/post"
 import { Button, Dialog, Input, Select, Textarea, Card, Table } from "@/shared/ui"
 
 const HomePage = () => {
@@ -11,7 +13,7 @@ const HomePage = () => {
   const queryParams = new URLSearchParams(location.search)
 
   // 상태 관리
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = useState<PostWithAuthor[]>([])
   const [total, setTotal] = useState(0)
   const [skip, setSkip] = useState(parseInt(queryParams.get("skip") || "0"))
   const [limit, setLimit] = useState(parseInt(queryParams.get("limit") || "10"))
@@ -32,7 +34,7 @@ const HomePage = () => {
   const [showEditCommentDialog, setShowEditCommentDialog] = useState(false)
   const [showPostDetailDialog, setShowPostDetailDialog] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   // URL 업데이트 함수
   const updateURL = () => {
@@ -50,17 +52,16 @@ const HomePage = () => {
   const fetchPosts = () => {
     setLoading(true)
     let postsData: Awaited<ReturnType<typeof postApi.getPosts>>
-    let usersData
+    let usersData: Awaited<ReturnType<typeof userApi.getUsers>>["users"]
 
     postApi
       .getPosts({ limit, skip })
       .then((data) => {
         postsData = data
-        return fetch("/api/users?limit=0&select=username,image")
+        return userApi.getUsers({ limit: 0 })
       })
-      .then((response) => response.json())
-      .then((users) => {
-        usersData = users.users
+      .then((data) => {
+        usersData = data.users
         const postsWithUsers = postsData.posts.map((post) => ({
           ...post,
           author: usersData.find((user) => user.id === post.userId),
@@ -94,9 +95,18 @@ const HomePage = () => {
     }
     setLoading(true)
     try {
-      const data = await postApi.searchPosts(searchQuery)
-      setPosts(data.posts)
-      setTotal(data.total)
+      const [postsResponse, usersResponse] = await Promise.all([
+        postApi.searchPosts(searchQuery),
+        userApi.getUsers({ limit: 0 }),
+      ])
+
+      const postsWithAuthor = postsResponse.posts.map((post) => ({
+        ...post,
+        author: usersResponse.users.find((user) => user.id === post.userId),
+      }))
+
+      setPosts(postsWithAuthor)
+      setTotal(postsResponse.total)
     } catch (error) {
       console.error("게시물 검색 오류:", error)
     }
@@ -113,10 +123,10 @@ const HomePage = () => {
     try {
       const [postsResponse, usersResponse] = await Promise.all([
         postApi.getPostsByTag(tag),
-        fetch("/api/users?limit=0&select=username,image"),
+        userApi.getUsers({ limit: 0 }),
       ])
       const postsData = postsResponse
-      const usersData = await usersResponse.json()
+      const usersData = usersResponse
 
       const postsWithUsers = postsData.posts.map((post) => ({
         ...post,
@@ -258,10 +268,9 @@ const HomePage = () => {
   }
 
   // 사용자 모달 열기
-  const openUserModal = async (user) => {
+  const openUserModal = async (user: Exclude<PostWithAuthor["author"], undefined>) => {
     try {
-      const response = await fetch(`/api/users/${user.id}`)
-      const userData = await response.json()
+      const userData = await userApi.getUser(user.id)
       setSelectedUser(userData)
       setShowUserModal(true)
     } catch (error) {
@@ -574,13 +583,13 @@ const HomePage = () => {
             <Input
               placeholder="제목"
               value={selectedPost?.title || ""}
-              onChange={(e) => setSelectedPost({ ...selectedPost, title: e.target.value })}
+              onChange={(e) => setSelectedPost({ ...selectedPost!, title: e.target.value })}
             />
             <Textarea
               rows={15}
               placeholder="내용"
               value={selectedPost?.body || ""}
-              onChange={(e) => setSelectedPost({ ...selectedPost, body: e.target.value })}
+              onChange={(e) => setSelectedPost({ ...selectedPost!, body: e.target.value })}
             />
             <Button onClick={updatePost}>게시물 업데이트</Button>
           </div>
@@ -625,10 +634,10 @@ const HomePage = () => {
       <Dialog.Root open={showPostDetailDialog} onOpenChange={setShowPostDetailDialog}>
         <Dialog.Content className="max-w-3xl">
           <Dialog.Header>
-            <Dialog.Title>{highlightText(selectedPost?.title, searchQuery)}</Dialog.Title>
+            <Dialog.Title>{highlightText(selectedPost!.title, searchQuery)}</Dialog.Title>
           </Dialog.Header>
           <div className="space-y-4">
-            <p>{highlightText(selectedPost?.body, searchQuery)}</p>
+            <p>{highlightText(selectedPost!.body, searchQuery)}</p>
             {renderComments(selectedPost?.id)}
           </div>
         </Dialog.Content>
