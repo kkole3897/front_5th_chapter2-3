@@ -1,2 +1,2 @@
 export { type PostWithAuthor, useAddPostDialogStore, usePostsStore } from "./model"
-export { PostAddDialog } from "./ui"
+export { PostAddDialog, PostAddButton } from "./ui"

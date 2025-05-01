@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 
-import { PostWithAuthor, PostAddDialog, useAddPostDialogStore, usePostsStore } from "@/features/post"
+import { PostWithAuthor, PostAddDialog, useAddPostDialogStore, usePostsStore, PostAddButton } from "@/features/post"
 import { Post, Tag, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
 import { Comment, api as commentApi } from "@/entities/comment"
@@ -430,10 +430,7 @@ const HomePage = () => {
       <Card.Header>
         <Card.Title className="flex items-center justify-between">
           <span>게시물 관리자</span>
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            게시물 추가
-          </Button>
+          <PostAddButton />
         </Card.Title>
       </Card.Header>
       <Card.Content>
