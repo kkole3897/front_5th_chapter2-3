@@ -15,7 +15,7 @@ import {
   PostEditDialog,
   useEditPostDialogStore,
 } from "@/features/post"
-import { CommentAddDialog, useCommentAddDialogStore, useCommentsStore } from "@/features/comment"
+import { CommentAddDialog, useCommentAddDialogStore, useCommentsStore, useNewCommentStore } from "@/features/comment"
 import { Post, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
 import { Comment, api as commentApi } from "@/entities/comment"
@@ -39,6 +39,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false)
   const { selectedTag, setSelectedTag } = useSelectTagStore()
   const { comments, setComments } = useCommentsStore()
+  const { newComment, setNewComment } = useNewCommentStore()
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
   const { setShowAddCommentDialog } = useCommentAddDialogStore()
   const [showEditCommentDialog, setShowEditCommentDialog] = useState(false)
@@ -156,7 +157,7 @@ const HomePage = () => {
     if (comments[postId]) return // 이미 불러온 댓글이 있으면 다시 불러오지 않음
     try {
       const data = await commentApi.getComments(postId)
-      setComments((prev) => ({ ...prev, [postId]: data.comments }))
+      setComments({ ...comments, [postId]: data.comments })
     } catch (error) {
       console.error("댓글 가져오기 오류:", error)
     }
@@ -166,10 +167,10 @@ const HomePage = () => {
   const updateComment = async () => {
     try {
       const data = await commentApi.updateComment(selectedComment!)
-      setComments((prev) => ({
-        ...prev,
-        [data.postId]: prev[data.postId].map((comment) => (comment.id === data.id ? data : comment)),
-      }))
+      setComments({
+        ...comments,
+        [data.postId]: comments[data.postId].map((comment) => (comment.id === data.id ? data : comment)),
+      })
       setShowEditCommentDialog(false)
     } catch (error) {
       console.error("댓글 업데이트 오류:", error)
@@ -180,10 +181,10 @@ const HomePage = () => {
   const deleteComment = async (id: number, postId: number) => {
     try {
       await commentApi.deleteComment(id)
-      setComments((prev) => ({
-        ...prev,
-        [postId]: prev[postId].filter((comment) => comment.id !== id),
-      }))
+      setComments({
+        ...comments,
+        [postId]: comments[postId].filter((comment) => comment.id !== id),
+      })
     } catch (error) {
       console.error("댓글 삭제 오류:", error)
     }
@@ -195,10 +196,10 @@ const HomePage = () => {
       const likes = comments[postId].find((c) => c.id === id)!.likes + 1
 
       const data = await commentApi.updateCommentLikes(id, likes)
-      setComments((prev) => ({
-        ...prev,
-        [postId]: prev[postId].map((comment) => (comment.id === data.id ? { ...data, likes } : comment)),
-      }))
+      setComments({
+        ...comments,
+        [postId]: comments[postId].map((comment) => (comment.id === data.id ? { ...data, likes } : comment)),
+      })
     } catch (error) {
       console.error("댓글 좋아요 오류:", error)
     }
@@ -344,7 +345,7 @@ const HomePage = () => {
         <Button
           size="sm"
           onClick={() => {
-            setNewComment((prev) => ({ ...prev, postId }))
+            setNewComment({ ...newComment, postId })
             setShowAddCommentDialog(true)
           }}
         >

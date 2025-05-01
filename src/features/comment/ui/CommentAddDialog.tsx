@@ -1,6 +1,4 @@
-import { useState } from "react"
-
-import { useCommentAddDialogStore, useCommentsStore } from "../model"
+import { useCommentAddDialogStore, useCommentsStore, useNewCommentStore } from "../model"
 import { api as commentApi } from "@/entities/comment"
 import { Dialog, Textarea, Button } from "@/shared/ui"
 
@@ -8,11 +6,8 @@ const CommentAddDialog = () => {
   const { showAddCommentDialog, setShowAddCommentDialog } = useCommentAddDialogStore()
   const { comments, setComments } = useCommentsStore()
 
-  const [newComment, setNewComment] = useState<{ body: string; postId: null | number; userId: number }>({
-    body: "",
-    postId: null,
-    userId: 1,
-  })
+  const { newComment, setNewComment } = useNewCommentStore()
+
   // 댓글 추가
   const addComment = async () => {
     try {
