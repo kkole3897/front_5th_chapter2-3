@@ -15,6 +15,7 @@ import {
   PostEditDialog,
   useEditPostDialogStore,
 } from "@/features/post"
+import { CommentAddDialog, useCommentAddDialogStore, useCommentsStore } from "@/features/comment"
 import { Post, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
 import { Comment, api as commentApi } from "@/entities/comment"
@@ -37,14 +38,9 @@ const HomePage = () => {
   const { setShowEditDialog } = useEditPostDialogStore()
   const [loading, setLoading] = useState(false)
   const { selectedTag, setSelectedTag } = useSelectTagStore()
-  const [comments, setComments] = useState<Record<number, Comment[]>>({})
+  const { comments, setComments } = useCommentsStore()
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
-  const [newComment, setNewComment] = useState<{ body: string; postId: null | number; userId: number }>({
-    body: "",
-    postId: null,
-    userId: 1,
-  })
-  const [showAddCommentDialog, setShowAddCommentDialog] = useState(false)
+  const { setShowAddCommentDialog } = useCommentAddDialogStore()
   const [showEditCommentDialog, setShowEditCommentDialog] = useState(false)
   const [showPostDetailDialog, setShowPostDetailDialog] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
@@ -163,27 +159,6 @@ const HomePage = () => {
       setComments((prev) => ({ ...prev, [postId]: data.comments }))
     } catch (error) {
       console.error("댓글 가져오기 오류:", error)
-    }
-  }
-
-  // 댓글 추가
-  const addComment = async () => {
-    try {
-      if (!newComment.postId) {
-        throw new Error("게시물 ID가 없습니다.")
-      }
-
-      const payload = newComment as unknown as Parameters<typeof commentApi.addComment>[0]
-
-      const data = await commentApi.addComment(payload)
-      setComments((prev) => ({
-        ...prev,
-        [data.postId]: [...(prev[data.postId] || []), data],
-      }))
-      setShowAddCommentDialog(false)
-      setNewComment({ body: "", postId: null, userId: 1 })
-    } catch (error) {
-      console.error("댓글 추가 오류:", error)
     }
   }
 
@@ -476,21 +451,7 @@ const HomePage = () => {
       <PostEditDialog />
 
       {/* 댓글 추가 대화상자 */}
-      <Dialog.Root open={showAddCommentDialog} onOpenChange={setShowAddCommentDialog}>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>새 댓글 추가</Dialog.Title>
-          </Dialog.Header>
-          <div className="space-y-4">
-            <Textarea
-              placeholder="댓글 내용"
-              value={newComment.body}
-              onChange={(e) => setNewComment({ ...newComment, body: e.target.value })}
-            />
-            <Button onClick={addComment}>댓글 추가</Button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Root>
+      <CommentAddDialog />
 
       {/* 댓글 수정 대화상자 */}
       <Dialog.Root open={showEditCommentDialog} onOpenChange={setShowEditCommentDialog}>
