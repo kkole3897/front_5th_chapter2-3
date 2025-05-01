@@ -2,9 +2,9 @@ import { useEffect, useState } from "react"
 import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 
+import { PostWithAuthor, PostAddDialog, useAddPostDialogStore, usePostsStore } from "@/features/post"
 import { Post, Tag, api as postApi } from "@/entities/post"
 import { User, api as userApi } from "@/entities/user"
-import { PostWithAuthor } from "@/features/post"
 import { Comment, api as commentApi } from "@/entities/comment"
 import { Button, Dialog, Input, Select, Textarea, Card, Table } from "@/shared/ui"
 
@@ -14,7 +14,9 @@ const HomePage = () => {
   const queryParams = new URLSearchParams(location.search)
 
   // 상태 관리
-  const [posts, setPosts] = useState<PostWithAuthor[]>([])
+  const { setShowAddDialog } = useAddPostDialogStore()
+  const { posts, setPosts } = usePostsStore()
+
   const [total, setTotal] = useState(0)
   const [skip, setSkip] = useState(parseInt(queryParams.get("skip") || "0"))
   const [limit, setLimit] = useState(parseInt(queryParams.get("limit") || "10"))
@@ -22,9 +24,7 @@ const HomePage = () => {
   const [selectedPost, setSelectedPost] = useState<PostWithAuthor | null>(null)
   const [sortBy, setSortBy] = useState(queryParams.get("sortBy") || "")
   const [sortOrder, setSortOrder] = useState(queryParams.get("sortOrder") || "asc")
-  const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [newPost, setNewPost] = useState({ title: "", body: "", userId: 1 })
   const [loading, setLoading] = useState(false)
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTag, setSelectedTag] = useState(queryParams.get("tag") || "")
@@ -144,18 +144,6 @@ const HomePage = () => {
       console.error("태그별 게시물 가져오기 오류:", error)
     }
     setLoading(false)
-  }
-
-  // 게시물 추가
-  const addPost = async () => {
-    try {
-      const data = await postApi.addPost(newPost)
-      setPosts([data, ...posts])
-      setShowAddDialog(false)
-      setNewPost({ title: "", body: "", userId: 1 })
-    } catch (error) {
-      console.error("게시물 추가 오류:", error)
-    }
   }
 
   // 게시물 업데이트
@@ -538,33 +526,7 @@ const HomePage = () => {
       </Card.Content>
 
       {/* 게시물 추가 대화상자 */}
-      <Dialog.Root open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>새 게시물 추가</Dialog.Title>
-          </Dialog.Header>
-          <div className="space-y-4">
-            <Input
-              placeholder="제목"
-              value={newPost.title}
-              onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-            />
-            <Textarea
-              rows={30}
-              placeholder="내용"
-              value={newPost.body}
-              onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
-            />
-            <Input
-              type="number"
-              placeholder="사용자 ID"
-              value={newPost.userId}
-              onChange={(e) => setNewPost({ ...newPost, userId: Number(e.target.value) })}
-            />
-            <Button onClick={addPost}>게시물 추가</Button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Root>
+      {<PostAddDialog />}
 
       {/* 게시물 수정 대화상자 */}
       <Dialog.Root open={showEditDialog} onOpenChange={setShowEditDialog}>
